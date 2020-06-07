@@ -41,7 +41,9 @@ public class Application {
 
     private static void startWithBootstrap() {
         ServiceConfig<DemoServiceImpl> service = new ServiceConfig<>();
+        //接口
         service.setInterface(DemoService.class);
+        //实现类
         service.setRef(new DemoServiceImpl());
 
         DubboBootstrap bootstrap = DubboBootstrap.getInstance();
@@ -54,10 +56,15 @@ public class Application {
 
     private static void startWithExport() throws InterruptedException {
         ServiceConfig<DemoServiceImpl> service = new ServiceConfig<>();
+        // 接口
         service.setInterface(DemoService.class);
+        // 实现类
         service.setRef(new DemoServiceImpl());
+
         service.setApplication(new ApplicationConfig("dubbo-demo-api-provider"));
+        // 注册中心
         service.setRegistry(new RegistryConfig("zookeeper://127.0.0.1:2181"));
+        // 核心流程：服务注册
         service.export();
 
         System.out.println("dubbo service started");

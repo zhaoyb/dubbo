@@ -19,11 +19,12 @@
 package org.apache.dubbo.config.bootstrap.rest;
 
 
-import org.apache.dubbo.rpc.protocol.rest.support.ContentType;
+//import org.apache.dubbo.rpc.protocol.rest.support.ContentType;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+//import org.apache.dubbo.rpc.protocol.rest.support.ContentType;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -34,7 +35,7 @@ import javax.ws.rs.core.MediaType;
 
 @Path("users")
 @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-@Produces({ContentType.APPLICATION_JSON_UTF_8, ContentType.TEXT_XML_UTF_8})
+//@Produces({ContentType.APPLICATION_JSON_UTF_8, ContentType.TEXT_XML_UTF_8})
 @Api(value = "UserService")
 public interface UserService {
 

@@ -23,11 +23,7 @@ import org.apache.dubbo.common.bytecode.Wrapper;
 import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.common.logger.Logger;
 import org.apache.dubbo.common.logger.LoggerFactory;
-import org.apache.dubbo.common.utils.ClassUtils;
-import org.apache.dubbo.common.utils.CollectionUtils;
-import org.apache.dubbo.common.utils.ConfigUtils;
-import org.apache.dubbo.common.utils.NamedThreadFactory;
-import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.common.utils.*;
 import org.apache.dubbo.config.annotation.Service;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
 import org.apache.dubbo.config.event.ServiceConfigExportedEvent;
@@ -50,55 +46,20 @@ import org.apache.dubbo.rpc.service.GenericService;
 import org.apache.dubbo.rpc.support.ProtocolUtils;
 
 import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.net.*;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.dubbo.common.constants.CommonConstants.ANYHOST_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.ANY_VALUE;
-import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_METADATA_STORAGE_TYPE;
-import static org.apache.dubbo.common.constants.CommonConstants.DUBBO;
-import static org.apache.dubbo.common.constants.CommonConstants.DUBBO_IP_TO_BIND;
-import static org.apache.dubbo.common.constants.CommonConstants.LOCALHOST_VALUE;
-import static org.apache.dubbo.common.constants.CommonConstants.METADATA_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.METHODS_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.MONITOR_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PROVIDER_SIDE;
 import static org.apache.dubbo.common.constants.CommonConstants.REGISTER_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.REMOTE_METADATA_STORAGE_TYPE;
-import static org.apache.dubbo.common.constants.CommonConstants.REVISION_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.SIDE_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.*;
 import static org.apache.dubbo.common.constants.RegistryConstants.DYNAMIC_KEY;
-import static org.apache.dubbo.common.utils.NetUtils.getAvailablePort;
-import static org.apache.dubbo.common.utils.NetUtils.getLocalHost;
-import static org.apache.dubbo.common.utils.NetUtils.isInvalidLocalHost;
-import static org.apache.dubbo.common.utils.NetUtils.isInvalidPort;
-import static org.apache.dubbo.config.Constants.DUBBO_IP_TO_REGISTRY;
-import static org.apache.dubbo.config.Constants.DUBBO_PORT_TO_BIND;
-import static org.apache.dubbo.config.Constants.DUBBO_PORT_TO_REGISTRY;
-import static org.apache.dubbo.config.Constants.MULTICAST;
-import static org.apache.dubbo.config.Constants.SCOPE_NONE;
+import static org.apache.dubbo.common.utils.NetUtils.*;
+import static org.apache.dubbo.config.Constants.*;
 import static org.apache.dubbo.remoting.Constants.BIND_IP_KEY;
 import static org.apache.dubbo.remoting.Constants.BIND_PORT_KEY;
-import static org.apache.dubbo.rpc.Constants.GENERIC_KEY;
-import static org.apache.dubbo.rpc.Constants.LOCAL_PROTOCOL;
-import static org.apache.dubbo.rpc.Constants.PROXY_KEY;
-import static org.apache.dubbo.rpc.Constants.SCOPE_KEY;
-import static org.apache.dubbo.rpc.Constants.SCOPE_LOCAL;
-import static org.apache.dubbo.rpc.Constants.SCOPE_REMOTE;
-import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
+import static org.apache.dubbo.rpc.Constants.*;
 import static org.apache.dubbo.rpc.cluster.Constants.EXPORT_KEY;
 
 public class ServiceConfig<T> extends ServiceConfigBase<T> {
@@ -115,11 +76,14 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      */
     private static final ScheduledExecutorService DELAY_EXPORT_EXECUTOR = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("DubboServiceDelayExporter", true));
 
+    //todo 这里先忽略具体的实现，简单理解一下，就是根据spi， 拿到协议实例，这里因为指定了 @SPI("dubbo") 所以默认是dubbo
     private static final Protocol PROTOCOL = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
 
     /**
      * A {@link ProxyFactory} implementation that will generate a exported service proxy,the JavassistProxyFactory is its
      * default implementation
+     * <p>
+     * 这里先忽略具体的实现，下面的代码就是生成代理类，默认是用JavassistProxyFactory
      */
     private static final ProxyFactory PROXY_FACTORY = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
 
@@ -130,6 +94,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     /**
      * The flag whether a service has unexported ,if the method unexported is invoked, the value is true
+     * 取消导出， 如果调用了
      */
     private transient volatile boolean unexported;
 
@@ -157,6 +122,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         return unexported;
     }
 
+    /**
+     * todo  这里应该是服务卸载？
+     * 取消导出
+     *
+     * */
     public void unexport() {
         if (!exported) {
             return;
@@ -192,17 +162,23 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
         checkAndUpdateSubConfigs();
 
-        //init serviceMetadata
+        //init serviceMetadata  初始化服务端元数据
         serviceMetadata.setVersion(version);
+        // todo 组  有什么用？
         serviceMetadata.setGroup(group);
         serviceMetadata.setDefaultGroup(group);
+        //类型
         serviceMetadata.setServiceType(getInterfaceClass());
+        //接口名称
         serviceMetadata.setServiceInterfaceName(getInterface());
+        // ref 实现类
         serviceMetadata.setTarget(getRef());
 
         if (shouldDelay()) {
+            //延迟发布
             DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
         } else {
+            //发布
             doExport();
         }
 
@@ -221,7 +197,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         checkProtocol();
         // init some null configuration.
         List<ConfigInitializer> configInitializers = ExtensionLoader.getExtensionLoader(ConfigInitializer.class)
-                .getActivateExtension(URL.valueOf("configInitializer://"), (String[]) null);
+                                                                    .getActivateExtension(URL.valueOf("configInitializer://"), (String[]) null);
         configInitializers.forEach(e -> e.initServiceConfig(this));
 
         // if protocol is not injvm checkRegistry
@@ -242,7 +218,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         } else {
             try {
                 interfaceClass = Class.forName(interfaceName, true, Thread.currentThread()
-                        .getContextClassLoader());
+                                                                          .getContextClassLoader());
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
@@ -286,15 +262,19 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
 
     protected synchronized void doExport() {
+        //取消发布
         if (unexported) {
             throw new IllegalStateException("The service " + interfaceClass.getName() + " has already unexported!");
         }
+        // 已经发布
         if (exported) {
             return;
         }
         exported = true;
 
+        // path like org.apache.dubbo.demo.DemoService
         if (StringUtils.isEmpty(path)) {
+            // 接口名做为path
             path = interfaceName;
         }
         doExportUrls();
@@ -302,31 +282,38 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
+        // 服务仓库实例
         ServiceRepository repository = ApplicationModel.getServiceRepository();
+        // 服务描述
         ServiceDescriptor serviceDescriptor = repository.registerService(getInterfaceClass());
+        // 内部实现：仅仅是放到到两个集合中
         repository.registerProvider(
                 getUniqueServiceName(),
                 ref,
                 serviceDescriptor,
                 this,
                 serviceMetadata
-        );
+                                   );
 
+        //URL  like registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=1495&registry=zookeeper&timestamp=1591472061775
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
+        // protocolconfig :
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig)
-                    .map(p -> p + "/" + path)
-                    .orElse(path), group, version);
+                                                  .map(p -> p + "/" + path)
+                                                  .orElse(path), group, version);
             // In case user specified path, register service one more time to map it to path.
             repository.registerService(pathKey, interfaceClass);
             // TODO, uncomment this line once service key is unified
             serviceMetadata.setServiceKey(pathKey);
+            // 到这里开始真正的注册
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
     }
 
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
+        //协议名称: dubbo
         String name = protocolConfig.getName();
         if (StringUtils.isEmpty(name)) {
             name = DUBBO;
@@ -348,6 +335,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (metadataReportConfig != null && metadataReportConfig.isValid()) {
             map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
         }
+        // 下面这段就是获取服务提供的方法
         if (CollectionUtils.isNotEmpty(getMethods())) {
             for (MethodConfig method : getMethods()) {
                 AbstractConfig.appendParameters(map, method, method.getName());
@@ -425,7 +413,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         /**
          * Here the token value configured by the provider is used to assign the value to ServiceConfig#token
          */
-        if(ConfigUtils.isEmpty(token) && provider != null) {
+        if (ConfigUtils.isEmpty(token) && provider != null) {
             token = provider.getToken();
         }
 
@@ -442,13 +430,14 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // export service
         String host = findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = findConfigedPorts(protocolConfig, name, map);
+        // url : dubbo://192.168.1.4:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=192.168.1.4&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=1644&release=&side=provider&timestamp=1591472407785
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
 
         // You can customize Configurator to append extra parameters
         if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
-                .hasExtension(url.getProtocol())) {
+                           .hasExtension(url.getProtocol())) {
             url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
-                    .getExtension(url.getProtocol()).getConfigurator(url).configure(url);
+                                 .getExtension(url.getProtocol()).getConfigurator(url).configure(url);
         }
 
         String scope = url.getParameter(SCOPE_KEY);
@@ -489,6 +478,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
+                        //调用协议对应的注册方法
                         Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
                         exporters.add(exporter);
                     }
@@ -520,11 +510,12 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      * always export injvm
      */
     private void exportLocal(URL url) {
+        // local injvm://127.0.0.1/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=192.168.1.4&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=1686&release=&side=provider&timestamp=1591472739592
         URL local = URLBuilder.from(url)
-                .setProtocol(LOCAL_PROTOCOL)
-                .setHost(LOCALHOST_VALUE)
-                .setPort(0)
-                .build();
+                              .setProtocol(LOCAL_PROTOCOL)
+                              .setHost(LOCALHOST_VALUE)
+                              .setPort(0)
+                              .build();
         Exporter<?> exporter = PROTOCOL.export(
                 PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, local));
         exporters.add(exporter);
@@ -706,8 +697,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     }
 
     private void postProcessConfig() {
-        List<ConfigPostProcessor> configPostProcessors =ExtensionLoader.getExtensionLoader(ConfigPostProcessor.class)
-                .getActivateExtension(URL.valueOf("configPostProcessor://"), (String[]) null);
+        List<ConfigPostProcessor> configPostProcessors = ExtensionLoader.getExtensionLoader(ConfigPostProcessor.class)
+                                                                        .getActivateExtension(URL.valueOf("configPostProcessor://"), (String[]) null);
         configPostProcessors.forEach(component -> component.postProcessServiceConfig(this));
     }
 
