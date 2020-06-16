@@ -102,7 +102,12 @@ public class ExtensionLoader<T> {
 
     private ExtensionLoader(Class<?> type) {
         this.type = type;
-        objectFactory = (type == ExtensionFactory.class ? null : ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension());
+        if (type == ExtensionFactory.class) {
+            objectFactory = null;
+        } else {
+            objectFactory = ExtensionLoader.getExtensionLoader(ExtensionFactory.class).getAdaptiveExtension();
+        }
+
     }
 
     private static <T> boolean withExtensionAnnotation(Class<T> type) {
@@ -367,6 +372,7 @@ public class ExtensionLoader<T> {
     /**
      * Find the extension with the given name. If the specified name is not found, then {@link IllegalStateException}
      * will be thrown.
+     * 根据指定名称获取扩展类， 如果指定名称对应的类不存在， 则抛出异常
      */
     @SuppressWarnings("unchecked")
     public T getExtension(String name) {
@@ -610,6 +616,9 @@ public class ExtensionLoader<T> {
         return getExtensionClasses().containsKey(name);
     }
 
+    /**
+     * 调用实例setter
+     */
     private T injectExtension(T instance) {
 
         if (objectFactory == null) {
@@ -957,6 +966,9 @@ public class ExtensionLoader<T> {
         return name.toLowerCase();
     }
 
+    /**
+     * 创建类实例
+     */
     @SuppressWarnings("unchecked")
     private T createAdaptiveExtension() {
         try {
@@ -974,10 +986,17 @@ public class ExtensionLoader<T> {
         return cachedAdaptiveClass = createAdaptiveExtensionClass();
     }
 
+    /**
+     * 创建扩展类的类型，为实例化做准备
+     */
     private Class<?> createAdaptiveExtensionClass() {
+        //生成code
         String code = new AdaptiveClassCodeGenerator(type, cachedDefaultName).generate();
+        //类加载器
         ClassLoader classLoader = findClassLoader();
+        // 编译类
         org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
+        //编译
         return compiler.compile(code, classLoader);
     }
 

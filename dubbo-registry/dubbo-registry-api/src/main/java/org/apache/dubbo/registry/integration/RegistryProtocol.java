@@ -206,6 +206,7 @@ public class RegistryProtocol implements Protocol {
         // decide if we need to delay publish
         boolean register = providerUrl.getParameter(REGISTER_KEY, true);
         if (register) {
+            //这里进行服务的注册
             register(registryUrl, registeredProviderUrl);
         }
 

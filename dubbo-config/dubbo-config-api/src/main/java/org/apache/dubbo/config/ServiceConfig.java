@@ -151,6 +151,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     }
 
     public synchronized void export() {
+        //是否应该导出
         if (!shouldExport()) {
             return;
         }
