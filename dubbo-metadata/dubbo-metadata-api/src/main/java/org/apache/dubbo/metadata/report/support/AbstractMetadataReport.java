@@ -254,6 +254,7 @@ public abstract class AbstractMetadataReport implements MetadataReport {
             failedReports.remove(providerMetadataIdentifier);
             Gson gson = new Gson();
             String data = gson.toJson(serviceDefinition);
+            //保存服务端信息， 真正调用zookeeper等来保存信心
             doStoreProviderMetadata(providerMetadataIdentifier, data);
             saveProperties(providerMetadataIdentifier, data, true, !syncReport);
         } catch (Exception e) {

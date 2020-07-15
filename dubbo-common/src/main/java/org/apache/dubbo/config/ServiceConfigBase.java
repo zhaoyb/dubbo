@@ -397,6 +397,10 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
         return DUBBO + ".service." + interfaceName;
     }
 
+    /**
+     * 获取唯一的服务名， group + interfacename + version
+     *
+     * */
     @Parameter(excluded = true)
     public String getUniqueServiceName() {
         String group = StringUtils.isEmpty(this.group) ? provider.getGroup() : this.group;

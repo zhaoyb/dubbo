@@ -37,21 +37,25 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
 
     /**
      * The service version
+     * 服务版本号
      */
     protected String version;
 
     /**
      * The service group
+     * 服务组
      */
     protected String group;
 
     /**
      * whether the service is deprecated
+     * 服务是否是不推荐
      */
     protected Boolean deprecated = false;
 
     /**
      * The time delay register service (milliseconds)
+     * 服务延迟多长时间注册(单位：毫秒)
      */
     protected Integer delay;
 
@@ -62,6 +66,7 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
 
     /**
      * The service weight
+     * 服务权重
      */
     protected Integer weight;
 

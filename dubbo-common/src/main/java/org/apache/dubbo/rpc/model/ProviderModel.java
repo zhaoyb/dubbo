@@ -138,6 +138,7 @@ public class ProviderModel {
         this(serviceKey, serviceInstance, serviceModel, serviceConfig);
 
         this.serviceMetadata = serviceMetadata;
+        //获取方法
         initMethod(serviceModel.getServiceInterfaceClass());
     }
 

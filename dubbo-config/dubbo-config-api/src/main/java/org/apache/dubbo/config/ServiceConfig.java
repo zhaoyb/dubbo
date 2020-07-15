@@ -114,11 +114,14 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      */
     private static final ScheduledExecutorService DELAY_EXPORT_EXECUTOR = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("DubboServiceDelayExporter", true));
 
+    //todo 这里先忽略具体的实现，简单理解一下，就是根据spi， 拿到协议实例，这里因为指定了 @SPI("dubbo") 所以默认是dubbo
     private static final Protocol PROTOCOL = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
 
     /**
      * A {@link ProxyFactory} implementation that will generate a exported service proxy,the JavassistProxyFactory is its
      * default implementation
+     * <p>
+     * 这里先忽略具体的实现，下面的代码就是生成代理类，默认是用JavassistProxyFactory
      */
     private static final ProxyFactory PROXY_FACTORY = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
 
@@ -129,6 +132,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     /**
      * The flag whether a service has unexported ,if the method unexported is invoked, the value is true
+     * 取消导出， 如果调用了
      */
     private transient volatile boolean unexported;
 
@@ -156,6 +160,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         return unexported;
     }
 
+    /**
+     * todo  这里应该是服务卸载？
+     * 取消导出
+     *
+     * */
     public void unexport() {
         if (!exported) {
             return;
@@ -181,6 +190,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     // 导出服务 核心类
     public synchronized void export() {
+        //是否应该导出
         if (!shouldExport()) {
             return;
         }
@@ -192,18 +202,23 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
         checkAndUpdateSubConfigs();
 
-        //init serviceMetadata
+        //init serviceMetadata  初始化服务端元数据
         serviceMetadata.setVersion(version);
+        // todo 组  有什么用？
         serviceMetadata.setGroup(group);
         serviceMetadata.setDefaultGroup(group);
+        //类型
         serviceMetadata.setServiceType(getInterfaceClass());
+        //接口名称
         serviceMetadata.setServiceInterfaceName(getInterface());
+        // ref 实现类
         serviceMetadata.setTarget(getRef());
 
         if (shouldDelay()) {
             //延迟发布
             DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
         } else {
+            //发布
             doExport();
         }
 
@@ -287,15 +302,19 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
 
     protected synchronized void doExport() {
+        //取消发布
         if (unexported) {
             throw new IllegalStateException("The service " + interfaceClass.getName() + " has already unexported!");
         }
+        // 已经发布
         if (exported) {
             return;
         }
         exported = true;
 
+        // path like org.apache.dubbo.demo.DemoService
         if (StringUtils.isEmpty(path)) {
+            // 接口名做为path
             path = interfaceName;
         }
         doExportUrls();
@@ -303,17 +322,23 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
+        // 服务仓库实例
         ServiceRepository repository = ApplicationModel.getServiceRepository();
+        // 服务描述
         ServiceDescriptor serviceDescriptor = repository.registerService(getInterfaceClass());
-        repository.registerProvider(getUniqueServiceName(),
-                                    ref,
-                                    serviceDescriptor,
-                                    this,
-                                    serviceMetadata
-                                   );
 
+        // 内部实现：仅仅是放到到两个集合中
+        repository.registerProvider(
+                getUniqueServiceName(),
+                ref,
+                serviceDescriptor,
+                this,
+                serviceMetadata);
+
+        //URL  like registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=1495&registry=zookeeper&timestamp=1591472061775
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
+        // protocolconfig :
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig)
                                                   .map(p -> p + "/" + path)
@@ -322,11 +347,13 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             repository.registerService(pathKey, interfaceClass);
             // TODO, uncomment this line once service key is unified
             serviceMetadata.setServiceKey(pathKey);
+            // 到这里开始真正的注册
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
     }
 
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
+        //协议名称: dubbo
         String name = protocolConfig.getName();
         if (StringUtils.isEmpty(name)) {
             name = DUBBO;
@@ -348,6 +375,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (metadataReportConfig != null && metadataReportConfig.isValid()) {
             map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
         }
+        // 下面这段就是获取服务提供的方法
         if (CollectionUtils.isNotEmpty(getMethods())) {
             for (MethodConfig method : getMethods()) {
                 AbstractConfig.appendParameters(map, method, method.getName());
@@ -445,6 +473,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         // export service
         String host = findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = findConfigedPorts(protocolConfig, name, map);
+        // url : dubbo://192.168.1.4:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=192.168.1.4&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=1644&release=&side=provider&timestamp=1591472407785
         URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
 
         // You can customize Configurator to append extra parameters
@@ -492,6 +521,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
+                        //调用协议对应的注册方法
                         Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
                         exporters.add(exporter);
                     }
@@ -523,6 +553,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      * always export injvm
      */
     private void exportLocal(URL url) {
+        // local injvm://127.0.0.1/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&bind.ip=192.168.1.4&bind.port=20880&default=true&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=1686&release=&side=provider&timestamp=1591472739592
         URL local = URLBuilder.from(url)
                               .setProtocol(LOCAL_PROTOCOL)
                               .setHost(LOCALHOST_VALUE)
