@@ -16,56 +16,6 @@
  */
 package org.apache.dubbo.config;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.URLBuilder;
-import org.apache.dubbo.common.Version;
-import org.apache.dubbo.common.bytecode.Wrapper;
-import org.apache.dubbo.common.extension.ExtensionLoader;
-import org.apache.dubbo.common.logger.Logger;
-import org.apache.dubbo.common.logger.LoggerFactory;
-import org.apache.dubbo.common.utils.ClassUtils;
-import org.apache.dubbo.common.utils.CollectionUtils;
-import org.apache.dubbo.common.utils.ConfigUtils;
-import org.apache.dubbo.common.utils.NamedThreadFactory;
-import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.config.annotation.Service;
-import org.apache.dubbo.config.bootstrap.DubboBootstrap;
-import org.apache.dubbo.config.event.ServiceConfigExportedEvent;
-import org.apache.dubbo.config.event.ServiceConfigUnexportedEvent;
-import org.apache.dubbo.config.invoker.DelegateProviderMetaDataInvoker;
-import org.apache.dubbo.config.support.Parameter;
-import org.apache.dubbo.config.utils.ConfigValidationUtils;
-import org.apache.dubbo.event.Event;
-import org.apache.dubbo.event.EventDispatcher;
-import org.apache.dubbo.metadata.WritableMetadataService;
-import org.apache.dubbo.rpc.Exporter;
-import org.apache.dubbo.rpc.Invoker;
-import org.apache.dubbo.rpc.Protocol;
-import org.apache.dubbo.rpc.ProxyFactory;
-import org.apache.dubbo.rpc.cluster.ConfiguratorFactory;
-import org.apache.dubbo.rpc.model.ApplicationModel;
-import org.apache.dubbo.rpc.model.ServiceDescriptor;
-import org.apache.dubbo.rpc.model.ServiceRepository;
-import org.apache.dubbo.rpc.service.GenericService;
-import org.apache.dubbo.rpc.support.ProtocolUtils;
-
-import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import static org.apache.dubbo.common.constants.CommonConstants.ANYHOST_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.ANY_VALUE;
 import static org.apache.dubbo.common.constants.CommonConstants.DEFAULT_METADATA_STORAGE_TYPE;
@@ -100,6 +50,55 @@ import static org.apache.dubbo.rpc.Constants.SCOPE_LOCAL;
 import static org.apache.dubbo.rpc.Constants.SCOPE_REMOTE;
 import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.EXPORT_KEY;
+
+import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.URLBuilder;
+import org.apache.dubbo.common.Version;
+import org.apache.dubbo.common.bytecode.Wrapper;
+import org.apache.dubbo.common.extension.ExtensionLoader;
+import org.apache.dubbo.common.logger.Logger;
+import org.apache.dubbo.common.logger.LoggerFactory;
+import org.apache.dubbo.common.utils.ClassUtils;
+import org.apache.dubbo.common.utils.CollectionUtils;
+import org.apache.dubbo.common.utils.ConfigUtils;
+import org.apache.dubbo.common.utils.NamedThreadFactory;
+import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.config.annotation.Service;
+import org.apache.dubbo.config.bootstrap.DubboBootstrap;
+import org.apache.dubbo.config.event.ServiceConfigExportedEvent;
+import org.apache.dubbo.config.event.ServiceConfigUnexportedEvent;
+import org.apache.dubbo.config.invoker.DelegateProviderMetaDataInvoker;
+import org.apache.dubbo.config.support.Parameter;
+import org.apache.dubbo.config.utils.ConfigValidationUtils;
+import org.apache.dubbo.event.Event;
+import org.apache.dubbo.event.EventDispatcher;
+import org.apache.dubbo.metadata.WritableMetadataService;
+import org.apache.dubbo.rpc.Exporter;
+import org.apache.dubbo.rpc.Invoker;
+import org.apache.dubbo.rpc.Protocol;
+import org.apache.dubbo.rpc.ProxyFactory;
+import org.apache.dubbo.rpc.cluster.ConfiguratorFactory;
+import org.apache.dubbo.rpc.model.ApplicationModel;
+import org.apache.dubbo.rpc.model.ServiceDescriptor;
+import org.apache.dubbo.rpc.model.ServiceRepository;
+import org.apache.dubbo.rpc.service.GenericService;
+import org.apache.dubbo.rpc.support.ProtocolUtils;
 
 public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
@@ -180,6 +179,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         dispatch(new ServiceConfigUnexportedEvent(this));
     }
 
+    // 导出服务 核心类
     public synchronized void export() {
         if (!shouldExport()) {
             return;
@@ -201,6 +201,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         serviceMetadata.setTarget(getRef());
 
         if (shouldDelay()) {
+            //延迟发布
             DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
         } else {
             doExport();
@@ -221,7 +222,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         checkProtocol();
         // init some null configuration.
         List<ConfigInitializer> configInitializers = ExtensionLoader.getExtensionLoader(ConfigInitializer.class)
-                .getActivateExtension(URL.valueOf("configInitializer://"), (String[]) null);
+                                                                    .getActivateExtension(URL.valueOf("configInitializer://"), (String[]) null);
         configInitializers.forEach(e -> e.initServiceConfig(this));
 
         // if protocol is not injvm checkRegistry
@@ -242,7 +243,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         } else {
             try {
                 interfaceClass = Class.forName(interfaceName, true, Thread.currentThread()
-                        .getContextClassLoader());
+                                                                          .getContextClassLoader());
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
@@ -304,20 +305,19 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     private void doExportUrls() {
         ServiceRepository repository = ApplicationModel.getServiceRepository();
         ServiceDescriptor serviceDescriptor = repository.registerService(getInterfaceClass());
-        repository.registerProvider(
-                getUniqueServiceName(),
-                ref,
-                serviceDescriptor,
-                this,
-                serviceMetadata
-        );
+        repository.registerProvider(getUniqueServiceName(),
+                                    ref,
+                                    serviceDescriptor,
+                                    this,
+                                    serviceMetadata
+                                   );
 
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig)
-                    .map(p -> p + "/" + path)
-                    .orElse(path), group, version);
+                                                  .map(p -> p + "/" + path)
+                                                  .orElse(path), group, version);
             // In case user specified path, register service one more time to map it to path.
             repository.registerService(pathKey, interfaceClass);
             // TODO, uncomment this line once service key is unified
@@ -376,7 +376,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                                             if (argtypes[argument.getIndex()].getName().equals(argument.getType())) {
                                                 AbstractConfig.appendParameters(map, argument, method.getName() + "." + argument.getIndex());
                                             } else {
-                                                throw new IllegalArgumentException("Argument config error : the index attribute and type attribute not match :index :" + argument.getIndex() + ", type:" + argument.getType());
+                                                throw new IllegalArgumentException(
+                                                        "Argument config error : the index attribute and type attribute not match :index :" + argument.getIndex() + ", type:" + argument.getType());
                                             }
                                         } else {
                                             // multiple callbacks in the method
@@ -385,7 +386,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                                                 if (argclazz.getName().equals(argument.getType())) {
                                                     AbstractConfig.appendParameters(map, argument, method.getName() + "." + j);
                                                     if (argument.getIndex() != -1 && argument.getIndex() != j) {
-                                                        throw new IllegalArgumentException("Argument config error : the index attribute and type attribute not match :index :" + argument.getIndex() + ", type:" + argument.getType());
+                                                        throw new IllegalArgumentException(
+                                                                "Argument config error : the index attribute and type attribute not match :index :" + argument.getIndex() + ", type:" + argument
+                                                                        .getType());
                                                     }
                                                 }
                                             }
@@ -425,7 +428,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         /**
          * Here the token value configured by the provider is used to assign the value to ServiceConfig#token
          */
-        if(ConfigUtils.isEmpty(token) && provider != null) {
+        if (ConfigUtils.isEmpty(token) && provider != null) {
             token = provider.getToken();
         }
 
@@ -446,9 +449,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
         // You can customize Configurator to append extra parameters
         if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
-                .hasExtension(url.getProtocol())) {
+                           .hasExtension(url.getProtocol())) {
             url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
-                    .getExtension(url.getProtocol()).getConfigurator(url).configure(url);
+                                 .getExtension(url.getProtocol()).getConfigurator(url).configure(url);
         }
 
         String scope = url.getParameter(SCOPE_KEY);
@@ -521,10 +524,10 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      */
     private void exportLocal(URL url) {
         URL local = URLBuilder.from(url)
-                .setProtocol(LOCAL_PROTOCOL)
-                .setHost(LOCALHOST_VALUE)
-                .setPort(0)
-                .build();
+                              .setProtocol(LOCAL_PROTOCOL)
+                              .setHost(LOCALHOST_VALUE)
+                              .setPort(0)
+                              .build();
         Exporter<?> exporter = PROTOCOL.export(
                 PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, local));
         exporters.add(exporter);
@@ -533,8 +536,6 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     /**
      * Determine if it is injvm
-     *
-     * @return
      */
     private boolean isOnlyInJvm() {
         return getProtocols().size() == 1
@@ -546,11 +547,6 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      * Register & bind IP address for service provider, can be configured separately.
      * Configuration priority: environment variables -> java system properties -> host property in config file ->
      * /etc/hosts -> default network address -> first available network address
-     *
-     * @param protocolConfig
-     * @param registryURLs
-     * @param map
-     * @return
      */
     private String findConfigedHosts(ProtocolConfig protocolConfig,
                                      List<URL> registryURLs,
@@ -621,10 +617,6 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      * Register port and bind port for the provider, can be configured separately
      * Configuration priority: environment variable -> java system properties -> port property in protocol config file
      * -> protocol default port
-     *
-     * @param protocolConfig
-     * @param name
-     * @return
      */
     private Integer findConfigedPorts(ProtocolConfig protocolConfig,
                                       String name,
@@ -706,8 +698,8 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
     }
 
     private void postProcessConfig() {
-        List<ConfigPostProcessor> configPostProcessors =ExtensionLoader.getExtensionLoader(ConfigPostProcessor.class)
-                .getActivateExtension(URL.valueOf("configPostProcessor://"), (String[]) null);
+        List<ConfigPostProcessor> configPostProcessors = ExtensionLoader.getExtensionLoader(ConfigPostProcessor.class)
+                                                                        .getActivateExtension(URL.valueOf("configPostProcessor://"), (String[]) null);
         configPostProcessors.forEach(component -> component.postProcessServiceConfig(this));
     }
 
