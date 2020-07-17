@@ -114,7 +114,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      */
     private static final ScheduledExecutorService DELAY_EXPORT_EXECUTOR = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("DubboServiceDelayExporter", true));
 
-    //todo 这里先忽略具体的实现，简单理解一下，就是根据spi， 拿到协议实例，这里因为指定了 @SPI("dubbo") 所以默认是dubbo
+    //根据spi， 拿到协议实例，这里因为Protocol.class指定了 @SPI("dubbo") 所以默认是dubbo
     private static final Protocol PROTOCOL = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
 
     /**
