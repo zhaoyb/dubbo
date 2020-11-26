@@ -188,9 +188,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         dispatch(new ServiceConfigUnexportedEvent(this));
     }
 
-    // 导出服务 核心类
+    /**
+     * 发布服务 核心类
+     */
     public synchronized void export() {
-        //是否应该导出
+        //是否应该发布服务，主要是根据配置决定
         if (!shouldExport()) {
             return;
         }
@@ -203,19 +205,22 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         checkAndUpdateSubConfigs();
 
         //init serviceMetadata  初始化服务端元数据
+        // 元数据 - 版本
         serviceMetadata.setVersion(version);
-        // todo 组  有什么用？
+        // 元数据 - 组
         serviceMetadata.setGroup(group);
+        // 元数据 - 默认组
         serviceMetadata.setDefaultGroup(group);
-        //类型
+        // 元数据 - class type
         serviceMetadata.setServiceType(getInterfaceClass());
-        //接口名称
+        // 元数据 - 接口名称
         serviceMetadata.setServiceInterfaceName(getInterface());
         // ref 实现类
         serviceMetadata.setTarget(getRef());
 
+        // 根据配置， 是否需要延迟发布，
         if (shouldDelay()) {
-            //延迟发布
+            //延迟发布，就是放到一个线程池中，延迟调用
             DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
         } else {
             //发布
@@ -310,9 +315,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (exported) {
             return;
         }
+        // 设置为已发布
         exported = true;
 
         // path like org.apache.dubbo.demo.DemoService
+        // 如果path为空，则用接口名作为path
         if (StringUtils.isEmpty(path)) {
             // 接口名做为path
             path = interfaceName;

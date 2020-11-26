@@ -21,6 +21,9 @@ import org.apache.dubbo.common.extension.Adaptive;
 import org.apache.dubbo.common.extension.SPI;
 
 /**
+ *
+ * 默认实现netty3, 基于SPI机制
+ *
  * Transporter. (SPI, Singleton, ThreadSafe)
  * <p>
  * <a href="http://en.wikipedia.org/wiki/Transport_Layer">Transport Layer</a>
@@ -32,6 +35,8 @@ import org.apache.dubbo.common.extension.SPI;
 public interface Transporter {
 
     /**
+     * 绑定服务器  (服务端调用)
+     *
      * Bind a server.
      *
      * @param url     server url
@@ -44,6 +49,8 @@ public interface Transporter {
     RemotingServer bind(URL url, ChannelHandler handler) throws RemotingException;
 
     /**
+     * 连接到服务器(客户端调用)
+     *
      * Connect to a server.
      *
      * @param url     server url

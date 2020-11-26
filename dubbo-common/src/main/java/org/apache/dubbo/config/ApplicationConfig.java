@@ -48,6 +48,8 @@ import static org.apache.dubbo.config.Constants.TEST_ENVIRONMENT;
 
 
 /**
+ *  服务端 应用配置
+ *
  * The application info
  *
  * @export
@@ -58,16 +60,22 @@ public class ApplicationConfig extends AbstractConfig {
     private static final long serialVersionUID = 5508512956753757169L;
 
     /**
+     * 应用名称
+     *
      * Application name
      */
     private String name;
 
     /**
+     * 应用版本
+     *
      * The application version
      */
     private String version;
 
     /**
+     * 应用owner
+     *
      * Application owner
      */
     private String owner;

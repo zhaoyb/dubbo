@@ -35,6 +35,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATT
 import static org.apache.dubbo.common.constants.CommonConstants.DUBBO;
 
 /**
+ * 服务提供者配置
+ *
  * ServiceConfig
  *
  * @export
@@ -44,16 +46,21 @@ public abstract class ServiceConfigBase<T> extends AbstractServiceConfig {
     private static final long serialVersionUID = 3033787999037024738L;
 
     /**
+     * 接口名称
      * The interface name of the exported service
      */
     protected String interfaceName;
 
     /**
+     * 接口类
+     *
      * The interface class of the exported service
      */
     protected Class<?> interfaceClass;
 
     /**
+     * 引用的接口实现
+     *
      * The reference of the interface implementation
      */
     protected T ref;

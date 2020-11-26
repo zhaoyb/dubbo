@@ -60,6 +60,8 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
     protected Integer delay;
 
     /**
+     *
+     * 是否导出(发布)服务
      * Whether to export the service
      */
     protected Boolean export;
@@ -71,6 +73,7 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
     protected Integer weight;
 
     /**
+     * 服务文档中心
      * Document center
      */
     protected String document;
@@ -113,11 +116,15 @@ public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {
     private Boolean register;
 
     /**
+     *
+     * 预热时间
      * Warm up period
      */
     private Integer warmup;
 
     /**
+     *
+     * 序列化方式
      * The serialization type
      */
     private String serialization;

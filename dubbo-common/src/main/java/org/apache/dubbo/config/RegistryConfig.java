@@ -28,6 +28,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.SHUTDOWN_WAIT_KE
 import static org.apache.dubbo.config.Constants.REGISTRIES_SUFFIX;
 
 /**
+ * 注册配置
+ *
  * RegistryConfig
  *
  * @export
@@ -38,26 +40,36 @@ public class RegistryConfig extends AbstractConfig {
     private static final long serialVersionUID = 5508512956753757169L;
 
     /**
+     * 注册中心地址
+     *
      * Register center address
      */
     private String address;
 
     /**
+     * 注册中心用户名
+     *
      * Username to login register center
      */
     private String username;
 
     /**
+     * 注册中心密码
+     *
      * Password to login register center
      */
     private String password;
 
     /**
+     *
+     * 注册中心端口
      * Default port for register center
      */
     private Integer port;
 
     /**
+     *
+     * 注册中心协议 比如zookeeper
      * Protocol for register center
      */
     private String protocol;
@@ -110,6 +122,8 @@ public class RegistryConfig extends AbstractConfig {
     private Integer wait;
 
     /**
+     *
+     * 启动时，判断注册中心是否可用
      * Whether to check if register center is available when boot up
      */
     private Boolean check;

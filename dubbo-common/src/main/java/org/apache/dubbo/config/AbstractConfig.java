@@ -47,6 +47,8 @@ import java.util.stream.Collectors;
 import static org.apache.dubbo.common.utils.ReflectUtils.findMethodByMethodSignature;
 
 /**
+ *
+ *  用于解析配置
  * Utility methods and public methods for parsing configuration
  *
  * @export
@@ -57,11 +59,14 @@ public abstract class AbstractConfig implements Serializable {
     private static final long serialVersionUID = 4267533505537413570L;
 
     /**
+     *
+     * 新老版本key兼容映射
      * The legacy properties container
      */
     private static final Map<String, String> LEGACY_PROPERTIES = new HashMap<String, String>();
 
     /**
+     * 配置类名的后缀
      * The suffix container
      */
     private static final String[] SUFFIXES = new String[]{"Config", "Bean", "ConfigBase"};
@@ -111,30 +116,44 @@ public abstract class AbstractConfig implements Serializable {
         appendParameters(parameters, config, null);
     }
 
+    /**
+     *  解析config类， 将配置放入到parameters
+     *
+     * @param parameters
+     * @param config
+     * @param prefix
+     */
     @SuppressWarnings("unchecked")
     public static void appendParameters(Map<String, String> parameters, Object config, String prefix) {
         if (config == null) {
             return;
         }
+        // 获取类所有的方法
         Method[] methods = config.getClass().getMethods();
         for (Method method : methods) {
             try {
+                // 方法名
                 String name = method.getName();
+                // 根据方法名判断是否是get方法
                 if (MethodUtils.isGetter(method)) {
+                    // 获取方法上的Parameter注解
                     Parameter parameter = method.getAnnotation(Parameter.class);
                     if (method.getReturnType() == Object.class || parameter != null && parameter.excluded()) {
                         continue;
                     }
+                    // 参数key
                     String key;
                     if (parameter != null && parameter.key().length() > 0) {
                         key = parameter.key();
                     } else {
                         key = calculatePropertyFromGetter(name);
                     }
+                    // 参数value
                     Object value = method.invoke(config);
                     String str = String.valueOf(value).trim();
                     if (value != null && str.length() > 0) {
                         if (parameter != null && parameter.escaped()) {
+                            // 转义
                             str = URL.encode(str);
                         }
                         if (parameter != null && parameter.append()) {

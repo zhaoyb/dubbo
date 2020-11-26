@@ -61,8 +61,9 @@ public class Application {
         // 实现类
         service.setRef(new DemoServiceImpl());
 
+        // 应用配置
         service.setApplication(new ApplicationConfig("dubbo-demo-api-provider"));
-        // 注册中心
+        // 注册中心配置
         service.setRegistry(new RegistryConfig("zookeeper://127.0.0.1:2181"));
         // 核心流程：服务注册
         service.export();
