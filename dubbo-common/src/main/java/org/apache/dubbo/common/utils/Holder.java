@@ -17,6 +17,8 @@
 package org.apache.dubbo.common.utils;
 
 /**
+ * 帮助类，对value 进行了volitile修饰
+ *
  * Helper Class for hold a value.
  */
 public class Holder<T> {

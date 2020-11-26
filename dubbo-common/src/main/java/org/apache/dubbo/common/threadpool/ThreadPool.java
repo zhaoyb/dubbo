@@ -31,6 +31,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.THREADPOOL_KEY;
 public interface ThreadPool {
 
     /**
+     * 根据url的参数，使用对应的线程池
+     *
      * Thread pool
      *
      * @param url URL contains thread parameter

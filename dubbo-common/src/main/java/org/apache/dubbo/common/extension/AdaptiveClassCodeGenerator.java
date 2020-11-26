@@ -77,6 +77,8 @@ public class AdaptiveClassCodeGenerator {
     }
 
     /**
+     * 判断指定类中，至少有一个Adaptive修饰的方法
+     *
      * test if given type has at least one method annotated with <code>Adaptive</code>
      */
     private boolean hasAdaptiveMethod() {
@@ -88,15 +90,20 @@ public class AdaptiveClassCodeGenerator {
      */
     public String generate() {
         // no need to generate adaptive class since there's no adaptive method found.
+        // 判断是否有Adaptive修饰的方法
         if (!hasAdaptiveMethod()) {
             throw new IllegalStateException("No adaptive method exist on extension " + type.getName() + ", refuse to create the adaptive class!");
         }
 
         StringBuilder code = new StringBuilder();
+        // package
         code.append(generatePackageInfo());
+        // import
         code.append(generateImports());
+        // class 声明
         code.append(generateClassDeclaration());
 
+        // 方法
         Method[] methods = type.getMethods();
         for (Method method : methods) {
             code.append(generateMethod(method));
@@ -110,6 +117,7 @@ public class AdaptiveClassCodeGenerator {
     }
 
     /**
+     * 生成 package 信息
      * generate package info
      */
     private String generatePackageInfo() {
@@ -117,6 +125,8 @@ public class AdaptiveClassCodeGenerator {
     }
 
     /**
+     * 生成 import 信息
+     *
      * generate imports
      */
     private String generateImports() {
@@ -124,6 +134,8 @@ public class AdaptiveClassCodeGenerator {
     }
 
     /**
+     * 生成类 声明信息
+     *
      * generate class declaration
      */
     private String generateClassDeclaration() {
@@ -131,6 +143,8 @@ public class AdaptiveClassCodeGenerator {
     }
 
     /**
+     * 生成 未使用Adaptive修饰的方法， 内部知识抛出一个异常
+     *
      * generate method not annotated with Adaptive with throwing unsupported exception
      */
     private String generateUnsupported(Method method) {
@@ -153,13 +167,20 @@ public class AdaptiveClassCodeGenerator {
     }
 
     /**
+     * 生成  方法声明
+     *
      * generate method declaration
      */
     private String generateMethod(Method method) {
+        // 方法返回值
         String methodReturnType = method.getReturnType().getCanonicalName();
+        // 方法名
         String methodName = method.getName();
+        // 方法内容
         String methodContent = generateMethodContent(method);
+        // 方法参数
         String methodArgs = generateMethodArguments(method);
+        // 方法声明的抛出的异常
         String methodThrows = generateMethodThrows(method);
         return String.format(CODE_METHOD_DECLARATION, methodReturnType, methodName, methodArgs, methodThrows, methodContent);
     }
@@ -195,25 +216,31 @@ public class AdaptiveClassCodeGenerator {
     }
 
     /**
+     * 生成方法内容
+     *
      * generate method content
      */
     private String generateMethodContent(Method method) {
+        // 方法Adaptive标注
         Adaptive adaptiveAnnotation = method.getAnnotation(Adaptive.class);
         StringBuilder code = new StringBuilder(512);
+        // 没用Adaptive标注的
         if (adaptiveAnnotation == null) {
             return generateUnsupported(method);
         } else {
+            // 获取URL 参数的位置索引
             int urlTypeIndex = getUrlTypeIndex(method);
 
             // found parameter in URL type
             if (urlTypeIndex != -1) {
-                // Null Point check
+                // Null Point check  对方法参数 即url 进行空判断
                 code.append(generateUrlNullCheck(urlTypeIndex));
             } else {
                 // did not find parameter in URL type
                 code.append(generateUrlAssignmentIndirectly(method));
             }
 
+            //注解值
             String[] value = getMethodAdaptiveValue(adaptiveAnnotation);
 
             boolean hasInvocation = hasInvocationArgument(method);
@@ -221,12 +248,13 @@ public class AdaptiveClassCodeGenerator {
             code.append(generateInvocationArgumentNullCheck(method));
 
             code.append(generateExtNameAssignment(value, hasInvocation));
-            // check extName == null?
+            // check extName == null? 判断扩展名是否为空
             code.append(generateExtNameNullCheck(value));
 
+            // 生成  “获取扩展的字符串”
             code.append(generateExtensionAssignment());
 
-            // return statement
+            // return statement 返回值
             code.append(generateReturnAndInvocation(method));
         }
 
