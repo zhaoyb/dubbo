@@ -19,6 +19,8 @@ package org.apache.dubbo.remoting.zookeeper;
 import org.apache.zookeeper.Watcher;
 
 /**
+ * 时间类型
+ *
  * 2019-02-26
  */
 public enum EventType {

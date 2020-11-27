@@ -54,6 +54,7 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
     public ZookeeperClient connect(URL url) {
         ZookeeperClient zookeeperClient;
         // address format: {[username:password@]address}
+        // 获取zookeeper地址
         List<String> addressList = getURLBackupAddress(url);
         // The field define the zookeeper server , including protocol, host, port, username, password
         if ((zookeeperClient = fetchAndUpdateZookeeperClientCache(addressList)) != null && zookeeperClient.isConnected()) {
@@ -112,7 +113,9 @@ public abstract class AbstractZookeeperTransporter implements ZookeeperTransport
      */
     List<String> getURLBackupAddress(URL url) {
         List<String> addressList = new ArrayList<String>();
+        // address
         addressList.add(url.getAddress());
+        // backup url
         addressList.addAll(url.getParameter(RemotingConstants.BACKUP_KEY, Collections.EMPTY_LIST));
 
         String authPrefix = null;

@@ -21,23 +21,57 @@ import org.apache.dubbo.common.URL;
 import java.util.List;
 import java.util.concurrent.Executor;
 
+/**
+ *
+ * zookeeper 客户端接口
+ *
+ */
 public interface ZookeeperClient {
 
+    /**
+     * 创建节点
+     *
+     * @param path
+     * @param ephemeral
+     */
     void create(String path, boolean ephemeral);
 
+    /**
+     * 删除节点
+     *
+     * @param path
+     */
     void delete(String path);
 
+    /**
+     * 获取子节点
+     *
+     * @param path
+     * @return
+     */
     List<String> getChildren(String path);
 
+    /**
+     * 添加子节点监听
+     *
+     *
+     * @param path
+     * @param listener
+     * @return
+     */
     List<String> addChildListener(String path, ChildListener listener);
 
     /**
+     * 添加数据监听
+     *
      * @param path:    directory. All of child of path will be listened.
      * @param listener
      */
     void addDataListener(String path, DataListener listener);
 
     /**
+     * 添加数据监听
+     *
      * @param path:    directory. All of child of path will be listened.
      * @param listener
      * @param executor another thread
@@ -48,18 +82,48 @@ public interface ZookeeperClient {
 
     void removeChildListener(String path, ChildListener listener);
 
+    /**
+     * 添加状态监听
+     *
+     * @param listener
+     */
     void addStateListener(StateListener listener);
 
+    /**
+     * 移除状态监听
+     *
+     * @param listener
+     */
     void removeStateListener(StateListener listener);
 
+    /**
+     * 是否已连接
+     *
+     * @return
+     */
     boolean isConnected();
 
+    /**
+     * 关闭
+     *
+     */
     void close();
 
+    /**
+     * 获取注册中心url
+     *
+     * @return
+     */
     URL getUrl();
 
     void create(String path, String content, boolean ephemeral);
 
+    /**
+     * 获取节点内容
+     *
+     * @param path
+     * @return
+     */
     String getContent(String path);
 
 }

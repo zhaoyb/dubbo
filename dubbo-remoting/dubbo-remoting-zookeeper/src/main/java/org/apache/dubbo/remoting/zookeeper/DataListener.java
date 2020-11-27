@@ -17,6 +17,8 @@
 package org.apache.dubbo.remoting.zookeeper;
 
 /**
+ * 数据监听
+ *
  * 2019-02-26
  */
 public interface DataListener {

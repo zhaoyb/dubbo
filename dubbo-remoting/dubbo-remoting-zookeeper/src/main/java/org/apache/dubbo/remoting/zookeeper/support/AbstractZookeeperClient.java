@@ -32,6 +32,12 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executor;
 
+/**
+ * 实现ZookeeperClient接口的抽象类
+ *
+ * @param <TargetDataListener>
+ * @param <TargetChildListener>
+ */
 public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildListener> implements ZookeeperClient {
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractZookeeperClient.class);
@@ -39,16 +45,33 @@ public abstract class AbstractZookeeperClient<TargetDataListener, TargetChildLis
     protected int DEFAULT_CONNECTION_TIMEOUT_MS = 5 * 1000;
     protected int DEFAULT_SESSION_TIMEOUT_MS = 60 * 1000;
 
+    /**
+     * 要连接注册中心的URL， 注意这个URL是dubbo的一个概念， 很多连接zookeeper的参数都要从这个URL上获取， 其中zookeeper的连接地址  就包含在这里面
+     *
+     */
     private final URL url;
 
+
+    /**
+     * state监听集合
+     *
+     */
     private final Set<StateListener> stateListeners = new CopyOnWriteArraySet<StateListener>();
 
+    /**
+     * 子节点监听集合
+     *
+     */
     private final ConcurrentMap<String, ConcurrentMap<ChildListener, TargetChildListener>> childListeners = new ConcurrentHashMap<String, ConcurrentMap<ChildListener, TargetChildListener>>();
 
     private final ConcurrentMap<String, ConcurrentMap<DataListener, TargetDataListener>> listeners = new ConcurrentHashMap<String, ConcurrentMap<DataListener, TargetDataListener>>();
 
     private volatile boolean closed = false;
 
+    /**
+     * 已将创建的持久化路径
+     *
+     */
     private final Set<String>  persistentExistNodePath = new ConcurrentHashSet<>();
 
     public AbstractZookeeperClient(URL url) {

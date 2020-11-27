@@ -49,6 +49,10 @@ import java.util.concurrent.TimeUnit;
 
 import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 
+/**
+ * 目前zookeeper注册中心 实现， 只有Curator一个实现了
+ *
+ */
 public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZookeeperClient.CuratorWatcherImpl, CuratorZookeeperClient.CuratorWatcherImpl> {
 
     protected static final Logger logger = LoggerFactory.getLogger(CuratorZookeeperClient.class);
@@ -61,20 +65,28 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
     public CuratorZookeeperClient(URL url) {
         super(url);
         try {
+            // 连接超时时间
             int timeout = url.getParameter(TIMEOUT_KEY, DEFAULT_CONNECTION_TIMEOUT_MS);
+            // 会话超时时间
             int sessionExpireMs = url.getParameter(ZK_SESSION_EXPIRE_KEY, DEFAULT_SESSION_TIMEOUT_MS);
+            // zookeeper连接builder器
             CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
                     .connectString(url.getBackupAddress())
                     .retryPolicy(new RetryNTimes(1, 1000))
                     .connectionTimeoutMs(timeout)
                     .sessionTimeoutMs(sessionExpireMs);
+            // 授权
             String authority = url.getAuthority();
             if (authority != null && authority.length() > 0) {
                 builder = builder.authorization("digest", authority.getBytes());
             }
+            // 创建客户端
             client = builder.build();
+            //连接状态监听
             client.getConnectionStateListenable().addListener(new CuratorConnectionStateListener(url));
+            // 开始连接
             client.start();
+            // 是否已经连上
             boolean connected = client.blockUntilConnected(timeout, TimeUnit.MILLISECONDS);
             if (!connected) {
                 throw new IllegalStateException("zookeeper not connected");
@@ -84,6 +96,11 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         }
     }
 
+    /**
+     * 创建持久化节点
+     *
+     * @param path
+     */
     @Override
     public void createPersistent(String path) {
         try {
@@ -95,6 +112,11 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         }
     }
 
+    /**
+     * 创建临时节点
+     *
+     * @param path
+     */
     @Override
     public void createEphemeral(String path) {
         try {
@@ -111,6 +133,12 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         }
     }
 
+    /**
+     * 创建持久节点，并赋值
+     *
+     * @param path
+     * @param data
+     */
     @Override
     protected void createPersistent(String path, String data) {
         byte[] dataBytes = data.getBytes(CHARSET);
@@ -127,6 +155,12 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         }
     }
 
+    /**
+     * 创建临时节点，并赋值
+     *
+     * @param path
+     * @param data
+     */
     @Override
     protected void createEphemeral(String path, String data) {
         byte[] dataBytes = data.getBytes(CHARSET);
@@ -144,6 +178,11 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         }
     }
 
+    /**
+     * 删除路径
+     *
+     * @param path the node path
+     */
     @Override
     protected void deletePath(String path) {
         try {
@@ -181,6 +220,12 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         return client.getZookeeperClient().isConnected();
     }
 
+    /**
+     * 获取值
+     *
+     * @param path
+     * @return
+     */
     @Override
     public String doGetContent(String path) {
         try {
@@ -257,6 +302,10 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         listener.unwatch();
     }
 
+    /**
+     * watch
+     *
+     */
     static class CuratorWatcherImpl implements CuratorWatcher, TreeCacheListener {
 
         private CuratorFramework client;
@@ -338,6 +387,10 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         }
     }
 
+    /**
+     * 连接状态监听
+     *
+     */
     private class CuratorConnectionStateListener implements ConnectionStateListener {
         private final long UNKNOWN_SESSION_ID = -1L;
 
