@@ -40,15 +40,38 @@ import static org.apache.dubbo.common.constants.CommonConstants.MAX_PROXY_COUNT;
  */
 
 public abstract class Proxy {
+
+    /**
+     * 返回null调用
+     *
+     */
     public static final InvocationHandler RETURN_NULL_INVOKER = (proxy, method, args) -> null;
+    /**
+     * 不支持的调用
+     *
+     */
     public static final InvocationHandler THROW_UNSUPPORTED_INVOKER = new InvocationHandler() {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) {
             throw new UnsupportedOperationException("Method [" + ReflectUtils.getName(method) + "] unimplemented.");
         }
     };
+    /**
+     * 代理类个数
+     *
+     */
     private static final AtomicLong PROXY_CLASS_COUNTER = new AtomicLong(0);
+
+    /**
+     * package包名
+     *
+     */
     private static final String PACKAGE_NAME = Proxy.class.getPackage().getName();
+
+    /**
+     * 代理类缓存
+     *
+     */
     private static final Map<ClassLoader, Map<String, Object>> PROXY_CACHE_MAP = new WeakHashMap<ClassLoader, Map<String, Object>>();
 
     private static final Object PENDING_GENERATION_MARKER = new Object();

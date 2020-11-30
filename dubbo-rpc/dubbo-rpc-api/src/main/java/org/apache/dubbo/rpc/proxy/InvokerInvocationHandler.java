@@ -45,7 +45,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        // 如果方法是Object对象下的方法，则直接调用
+        // 如果方法是 'Object' 对象下的方法，则直接调用
         if (method.getDeclaringClass() == Object.class) {
             return method.invoke(invoker, args);
         }

@@ -396,20 +396,26 @@ public class RegistryProtocol implements Protocol {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+        // 获取服务的注册中心url,
         url = getRegistryUrl(url);
+        // 获取注册中心实例
         Registry registry = registryFactory.getRegistry(url);
         if (RegistryService.class.equals(type)) {
             return proxyFactory.getInvoker((T) registry, type, url);
         }
 
         // group="a,b" or group="*"
+        // 获取服务消费元数九
         Map<String, String> qs = StringUtils.parseQueryString(url.getParameterAndDecoded(REFER_KEY));
+        // 从服务消费元数据中获取分组信息
         String group = qs.get(GROUP_KEY);
         if (group != null && group.length() > 0) {
             if ((COMMA_SPLIT_PATTERN.split(group)).length > 1 || "*".equals(group)) {
+                // 执行Invoker转换工作
                 return doRefer(getMergeableCluster(), registry, type, url);
             }
         }
+        // 执行Invoker转换工作
         return doRefer(cluster, registry, type, url);
     }
 
@@ -418,19 +424,27 @@ public class RegistryProtocol implements Protocol {
     }
 
     private <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url) {
+        // 创建 RegistryDirectory 对象
         RegistryDirectory<T> directory = new RegistryDirectory<T>(type, url);
+        // 设置注册中心
         directory.setRegistry(registry);
+        // 设置协议
         directory.setProtocol(protocol);
         // all attributes of REFER_KEY
+
+        // directory.getUrl().getParameters() 是服务消费元数据
         Map<String, String> parameters = new HashMap<String, String>(directory.getConsumerUrl().getParameters());
         URL subscribeUrl = new URL(CONSUMER_PROTOCOL, parameters.remove(REGISTER_IP_KEY), 0, type.getName(), parameters);
         if (directory.isShouldRegister()) {
             directory.setRegisteredConsumerUrl(subscribeUrl);
+            // 消费消息注册到注册中心
             registry.register(directory.getRegisteredConsumerUrl());
         }
         directory.buildRouterChain(subscribeUrl);
+        // 服务消费者订阅：服务提供端，动态配置，路由的通知
         directory.subscribe(toSubscribeUrl(subscribeUrl));
 
+        // 多个Invoker合并为一个
         Invoker<T> invoker = cluster.join(directory);
         List<RegistryProtocolListener> listeners = findRegistryProtocolListeners(url);
         if (CollectionUtils.isEmpty(listeners)) {
