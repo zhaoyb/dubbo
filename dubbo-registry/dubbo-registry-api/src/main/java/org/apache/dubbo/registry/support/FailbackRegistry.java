@@ -43,6 +43,8 @@ import static org.apache.dubbo.registry.Constants.DEFAULT_REGISTRY_RETRY_PERIOD;
 import static org.apache.dubbo.registry.Constants.REGISTRY_RETRY_PERIOD_KEY;
 
 /**
+ * 失败重试的注册类， 带有重试功能
+ *
  * FailbackRegistry. (SPI, Prototype, ThreadSafe)
  */
 public abstract class FailbackRegistry extends AbstractRegistry {
@@ -60,11 +62,17 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     private final ConcurrentMap<Holder, FailedNotifiedTask> failedNotified = new ConcurrentHashMap<Holder, FailedNotifiedTask>();
 
     /**
+     * 重试频率
+     *
      * The time in milliseconds the retryExecutor will wait
      */
     private final int retryPeriod;
 
     // Timer for failure retry, regular check if there is a request for failure, and if there is, an unlimited retry
+    /**
+     * 时间轮
+     *
+     */
     private final HashedWheelTimer retryTimer;
 
     public FailbackRegistry(URL url) {

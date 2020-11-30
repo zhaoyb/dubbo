@@ -357,6 +357,12 @@ public abstract class AbstractRegistry implements Registry {
         registered.remove(url);
     }
 
+    /**
+     * 订阅
+     *
+     * @param url      Subscription condition, not allowed to be empty, e.g. consumer://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
+     * @param listener A listener of the change event, not allowed to be empty
+     */
     @Override
     public void subscribe(URL url, NotifyListener listener) {
         if (url == null) {
@@ -368,10 +374,18 @@ public abstract class AbstractRegistry implements Registry {
         if (logger.isInfoEnabled()) {
             logger.info("Subscribe: " + url);
         }
+
         Set<NotifyListener> listeners = subscribed.computeIfAbsent(url, n -> new ConcurrentHashSet<>());
+        // 将订阅者放入集合
         listeners.add(listener);
     }
 
+    /**
+     * 取消订阅
+     *
+     * @param url      Subscription condition, not allowed to be empty, e.g. consumer://10.20.153.10/org.apache.dubbo.foo.BarService?version=1.0.0&application=kylin
+     * @param listener A listener of the change event, not allowed to be empty
+     */
     @Override
     public void unsubscribe(URL url, NotifyListener listener) {
         if (url == null) {
@@ -385,6 +399,7 @@ public abstract class AbstractRegistry implements Registry {
         }
         Set<NotifyListener> listeners = subscribed.get(url);
         if (listeners != null) {
+            // 将订阅者移除集合
             listeners.remove(listener);
         }
     }
@@ -444,13 +459,16 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     /**
+     * 通知监听器，
+     *
      * Notify changes from the Provider side.
      *
-     * @param url consumer side url
-     * @param listener listener
-     * @param urls provider latest urls
+     * @param url consumer side url   消费侧URL
+     * @param listener listener  监听器
+     * @param urls provider latest urls  全量的url
      */
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
+        // 参数校验
         if (url == null) {
             throw new IllegalArgumentException("notify url == null");
         }
@@ -468,6 +486,7 @@ public abstract class AbstractRegistry implements Registry {
         // keep every provider's category.
         Map<String, List<URL>> result = new HashMap<>();
         for (URL u : urls) {
+            // URL是否匹配
             if (UrlUtils.isMatch(url, u)) {
                 String category = u.getParameter(CATEGORY_KEY, DEFAULT_CATEGORY);
                 List<URL> categoryList = result.computeIfAbsent(category, k -> new ArrayList<>());
