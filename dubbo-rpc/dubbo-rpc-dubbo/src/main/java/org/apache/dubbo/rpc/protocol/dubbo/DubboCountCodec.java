@@ -33,25 +33,53 @@ import static org.apache.dubbo.rpc.Constants.OUTPUT_KEY;
 
 public final class DubboCountCodec implements Codec2 {
 
+    /**
+     * dubbo 编解码器
+     *
+     */
     private DubboCodec codec = new DubboCodec();
 
+    /**
+     * 编码
+     *
+     * @param channel
+     * @param buffer
+     * @param msg
+     * @throws IOException
+     */
     @Override
     public void encode(Channel channel, ChannelBuffer buffer, Object msg) throws IOException {
         codec.encode(channel, buffer, msg);
     }
 
+
+    /**
+     * 解码器
+     *
+     * @param channel
+     * @param buffer
+     * @return
+     * @throws IOException
+     */
     @Override
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
+        // 当前读取的位置
         int save = buffer.readerIndex();
+        // 解码结果，底层是用list存储多个结果
         MultiMessage result = MultiMessage.create();
         do {
             Object obj = codec.decode(channel, buffer);
+            // 如果需要读取更多，说明遇到半包
             if (Codec2.DecodeResult.NEED_MORE_INPUT == obj) {
+                // 重置读取位置
                 buffer.readerIndex(save);
                 break;
             } else {
+                // 将消息添加到结果集合
                 result.addMessage(obj);
+                // 记录消息长度
                 logMessageLength(obj, buffer.readerIndex() - save);
+                // 获取新的读取位置
                 save = buffer.readerIndex();
             }
         } while (true);
@@ -64,6 +92,12 @@ public final class DubboCountCodec implements Codec2 {
         return result;
     }
 
+    /**
+     * 设置消息长度
+     *
+     * @param result
+     * @param bytes
+     */
     private void logMessageLength(Object result, int bytes) {
         if (bytes <= 0) {
             return;

@@ -45,12 +45,17 @@ public class InvokerInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // 如果方法是Object对象下的方法，则直接调用
         if (method.getDeclaringClass() == Object.class) {
             return method.invoke(invoker, args);
         }
+        // 方法名
         String methodName = method.getName();
+        // 参数类型
         Class<?>[] parameterTypes = method.getParameterTypes();
+        // 没有参数
         if (parameterTypes.length == 0) {
+            // 下面三个方法，全部本地调用
             if ("toString".equals(methodName)) {
                 return invoker.toString();
             } else if ("$destroy".equals(methodName)) {
@@ -60,12 +65,16 @@ public class InvokerInvocationHandler implements InvocationHandler {
                 return invoker.hashCode();
             }
         } else if (parameterTypes.length == 1 && "equals".equals(methodName)) {
+            // 只有一个参数，并且是equals方法，也本地调用
             return invoker.equals(args[0]);
         }
+
+        // 组装RpcInvocation对象
         RpcInvocation rpcInvocation = new RpcInvocation(method, invoker.getInterface().getName(), args);
         String serviceKey = invoker.getUrl().getServiceKey();
         rpcInvocation.setTargetServiceUniqueName(serviceKey);
-      
+
+        // 消费端模型
         if (consumerModel != null) {
             rpcInvocation.put(Constants.CONSUMER_MODEL, consumerModel);
             rpcInvocation.put(Constants.METHOD_MODEL, consumerModel.getMethodModel(method));

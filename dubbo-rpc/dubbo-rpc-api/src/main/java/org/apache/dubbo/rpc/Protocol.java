@@ -24,12 +24,15 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * 协议接口，默认是dubbo实现
  * Protocol. (API/SPI, Singleton, ThreadSafe)
  */
 @SPI("dubbo")
 public interface Protocol {
 
     /**
+     * 当用户没有配置时，获取默认端口
+     *
      * Get default port when user doesn't config the port.
      *
      * @return default port
@@ -37,6 +40,8 @@ public interface Protocol {
     int getDefaultPort();
 
     /**
+     * 服务导出(发布)
+     *
      * Export service for remote invocation: <br>
      * 1. Protocol should record request source address after receive a request:
      * RpcContext.getContext().setRemoteAddress();<br>
@@ -53,6 +58,8 @@ public interface Protocol {
     <T> Exporter<T> export(Invoker<T> invoker) throws RpcException;
 
     /**
+     *
+     * 服务引用
      * Refer a remote service: <br>
      * 1. When user calls `invoke()` method of `Invoker` object which's returned from `refer()` call, the protocol
      * needs to correspondingly execute `invoke()` method of `Invoker` object <br>
@@ -71,6 +78,8 @@ public interface Protocol {
     <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException;
 
     /**
+     * 服务销毁
+     *
      * Destroy protocol: <br>
      * 1. Cancel all services this protocol exports and refers <br>
      * 2. Release all occupied resources, for example: connection, port, etc. <br>
@@ -79,6 +88,8 @@ public interface Protocol {
     void destroy();
 
     /**
+     *  获取所有服务
+     *
      * Get all servers serving this protocol
      *
      * @return

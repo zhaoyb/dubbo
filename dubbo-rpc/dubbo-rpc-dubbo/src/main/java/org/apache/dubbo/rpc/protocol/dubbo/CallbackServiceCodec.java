@@ -62,6 +62,14 @@ class CallbackServiceCodec {
     private static final byte CALLBACK_DESTROY = 0x2;
     private static final String INV_ATT_CALLBACK_KEY = "sys_callback_arg-";
 
+    /**
+     * 判断是否是回调
+     *
+     * @param url
+     * @param methodName
+     * @param argIndex
+     * @return
+     */
     private static byte isCallBack(URL url, String methodName, int argIndex) {
         // parameter callback rule: method-name.parameter-index(starting from 0).callback
         byte isCallback = CALLBACK_NONE;
@@ -254,6 +262,15 @@ class CallbackServiceCodec {
         }
     }
 
+    /**
+     *  设置回调
+     *
+     * @param channel
+     * @param inv
+     * @param paraIndex
+     * @return
+     * @throws IOException
+     */
     public static Object encodeInvocationArgument(Channel channel, RpcInvocation inv, int paraIndex) throws IOException {
         // get URL directly
         URL url = inv.getInvoker() == null ? null : inv.getInvoker().getUrl();

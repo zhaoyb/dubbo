@@ -74,13 +74,16 @@ public abstract class Proxy {
      * @return Proxy instance.
      */
     public static Proxy getProxy(ClassLoader cl, Class<?>... ics) {
+        // 要代理的类太多，抛出异常
         if (ics.length > MAX_PROXY_COUNT) {
             throw new IllegalArgumentException("interface limit exceeded");
         }
 
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < ics.length; i++) {
+            // 方法名
             String itf = ics[i].getName();
+            // 是否是接口
             if (!ics[i].isInterface()) {
                 throw new RuntimeException(itf + " is not a interface.");
             }
@@ -95,6 +98,7 @@ public abstract class Proxy {
                 throw new IllegalArgumentException(ics[i] + " is not visible from class loader");
             }
 
+            // 方法
             sb.append(itf).append(';');
         }
 

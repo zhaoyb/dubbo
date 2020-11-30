@@ -29,6 +29,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * 轮询负载
+ *
  * Round robin load balance.
  */
 public class RoundRobinLoadBalance extends AbstractLoadBalance {

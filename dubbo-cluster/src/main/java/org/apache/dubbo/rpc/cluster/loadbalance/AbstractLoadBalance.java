@@ -33,6 +33,8 @@ import static org.apache.dubbo.rpc.cluster.Constants.WARMUP_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.WEIGHT_KEY;
 
 /**
+ * 负载抽象类
+ *
  * AbstractLoadBalance
  */
 public abstract class AbstractLoadBalance implements LoadBalance {

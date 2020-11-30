@@ -16,14 +16,13 @@
  */
 package org.apache.dubbo.rpc;
 
-import org.apache.dubbo.common.URL;
-import org.apache.dubbo.common.utils.ReflectUtils;
-import org.apache.dubbo.common.utils.StringUtils;
-import org.apache.dubbo.rpc.model.ApplicationModel;
-import org.apache.dubbo.rpc.model.MethodDescriptor;
-import org.apache.dubbo.rpc.model.ServiceDescriptor;
-import org.apache.dubbo.rpc.model.ServiceRepository;
-import org.apache.dubbo.rpc.support.RpcUtils;
+import static org.apache.dubbo.common.constants.CommonConstants.APPLICATION_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.PATH_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
+import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -32,14 +31,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
-
-import static org.apache.dubbo.common.constants.CommonConstants.APPLICATION_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.INTERFACE_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.PATH_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
-import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
-import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.common.utils.ReflectUtils;
+import org.apache.dubbo.common.utils.StringUtils;
+import org.apache.dubbo.rpc.model.ApplicationModel;
+import org.apache.dubbo.rpc.model.MethodDescriptor;
+import org.apache.dubbo.rpc.model.ServiceDescriptor;
+import org.apache.dubbo.rpc.model.ServiceRepository;
+import org.apache.dubbo.rpc.support.RpcUtils;
 
 /**
  * RPC Invocation.
@@ -50,33 +49,73 @@ public class RpcInvocation implements Invocation, Serializable {
 
     private static final long serialVersionUID = -4355285085441097045L;
 
+    /**
+     * 目标服务唯一名称
+     */
     private String targetServiceUniqueName;
 
+    /**
+     * 方法名
+     */
     private String methodName;
+
+    /**
+     * 服务名
+     */
     private String serviceName;
 
+    // 参数类型
     private transient Class<?>[] parameterTypes;
+
+    /**
+     * 参数类型描述
+     */
     private String parameterTypesDesc;
+
+    /**
+     * 兼容方法签名
+     */
     private String[] compatibleParamSignatures;
 
+    /**
+     * 参数
+     */
     private Object[] arguments;
 
     /**
+     * 在RPC调用期间，传递到服务端，
+     * 算是把一些参数 透传到服务端， 比如skywalking, seata等，用户服务串联
      * Passed to the remote server during RPC call
      */
     private Map<String, Object> attachments;
 
     /**
+     * 仅用于调用方，目前还不知道怎么用
      * Only used on the caller side, will not appear on the wire.
      */
     private Map<Object, Object> attributes = new HashMap<Object, Object>();
 
+    /**
+     * 调用实现
+     *
+     */
     private transient Invoker<?> invoker;
 
+    /**
+     * 返回类型
+     */
     private transient Class<?> returnType;
 
+    /**
+     * 返回类型
+     */
     private transient Type[] returnTypes;
 
+
+    /**
+     * 调用方式， 同步  异步 ..
+     *
+     */
     private transient InvokeMode invokeMode;
 
     public RpcInvocation() {
@@ -84,8 +123,8 @@ public class RpcInvocation implements Invocation, Serializable {
 
     public RpcInvocation(Invocation invocation, Invoker<?> invoker) {
         this(invocation.getMethodName(), invocation.getServiceName(), invocation.getParameterTypes(),
-                invocation.getArguments(), new HashMap<>(invocation.getObjectAttachments()),
-                invocation.getInvoker(), invocation.getAttributes());
+             invocation.getArguments(), new HashMap<>(invocation.getObjectAttachments()),
+             invocation.getInvoker(), invocation.getAttributes());
         if (invoker != null) {
             URL url = invoker.getUrl();
             setAttachment(PATH_KEY, url.getPath());
@@ -113,7 +152,7 @@ public class RpcInvocation implements Invocation, Serializable {
 
     public RpcInvocation(Invocation invocation) {
         this(invocation.getMethodName(), invocation.getServiceName(), invocation.getParameterTypes(),
-                invocation.getArguments(), invocation.getObjectAttachments(), invocation.getInvoker(), invocation.getAttributes());
+             invocation.getArguments(), invocation.getObjectAttachments(), invocation.getInvoker(), invocation.getAttributes());
         this.targetServiceUniqueName = invocation.getTargetServiceUniqueName();
     }
 
@@ -134,14 +173,32 @@ public class RpcInvocation implements Invocation, Serializable {
         this(methodName, serviceName, parameterTypes, arguments, attachments, null, null);
     }
 
+    /**
+     * RpcInvocation 的构造， 可以看到，这里是到方法级别的
+     *
+     * @param methodName
+     * @param serviceName
+     * @param parameterTypes
+     * @param arguments
+     * @param attachments
+     * @param invoker
+     * @param attributes
+     */
     public RpcInvocation(String methodName, String serviceName, Class<?>[] parameterTypes, Object[] arguments,
                          Map<String, Object> attachments, Invoker<?> invoker, Map<Object, Object> attributes) {
+        // 方法名
         this.methodName = methodName;
+        // 服务名
         this.serviceName = serviceName;
+        // 参数类型
         this.parameterTypes = parameterTypes == null ? new Class<?>[0] : parameterTypes;
+        // 参数
         this.arguments = arguments == null ? new Object[0] : arguments;
+        // 附件
         this.attachments = attachments == null ? new HashMap<>() : attachments;
+        // 属性
         this.attributes = attributes == null ? new HashMap<>() : attributes;
+
         this.invoker = invoker;
         initParameterDesc();
     }
@@ -149,17 +206,23 @@ public class RpcInvocation implements Invocation, Serializable {
     private void initParameterDesc() {
         ServiceRepository repository = ApplicationModel.getServiceRepository();
         if (StringUtils.isNotEmpty(serviceName)) {
+            // 根据服务名，找服务描述
             ServiceDescriptor serviceDescriptor = repository.lookupService(serviceName);
             if (serviceDescriptor != null) {
+                // 根据方法名，找方法描述
                 MethodDescriptor methodDescriptor = serviceDescriptor.getMethod(methodName, parameterTypes);
                 if (methodDescriptor != null) {
+                    // 方法参数描述
                     this.parameterTypesDesc = methodDescriptor.getParamDesc();
+                    // 兼容
                     this.compatibleParamSignatures = methodDescriptor.getCompatibleParamSignatures();
+                    // 返回类型
                     this.returnTypes = methodDescriptor.getReturnTypes();
                 }
             }
         }
 
+        //parameterTypesDesc 如果为空，则本地生成
         if (parameterTypesDesc == null) {
             this.parameterTypesDesc = ReflectUtils.getDesc(this.getParameterTypes());
             this.compatibleParamSignatures = Stream.of(this.parameterTypes).map(Class::getName).toArray(String[]::new);

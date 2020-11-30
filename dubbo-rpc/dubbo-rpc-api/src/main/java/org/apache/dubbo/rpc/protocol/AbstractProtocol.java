@@ -40,6 +40,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 
 /**
+ * 协议 抽象实现
+ *
  * abstract ProtocolSupport.
  */
 public abstract class AbstractProtocol implements Protocol {

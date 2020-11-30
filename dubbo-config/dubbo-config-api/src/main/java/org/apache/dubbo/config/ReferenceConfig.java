@@ -258,6 +258,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
         serviceMetadata.getAttachments().putAll(map);
 
+        // 创建代理 核心方法 todo 客户端入口
         ref = createProxy(map);
 
         serviceMetadata.setTarget(ref);
@@ -367,6 +368,8 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             metadataService.publishServiceDefinition(consumerURL);
         }
         // create service proxy
+        // PROXY_FACTORY 默认实现是javassist
+        // ProtocolUtils.isGeneric(generic) 是否泛化
         return (T) PROXY_FACTORY.getProxy(invoker, ProtocolUtils.isGeneric(generic));
     }
 
