@@ -208,6 +208,21 @@ public abstract class Proxy {
                 }
             }
 
+            /**
+             *
+             * 上面对方法进行了代理，  生成的方法类似如下：
+             *
+             * public java.lang.String sayHello(java.lang.String arg0){
+             *          Object[] args = new Object[1];
+             *          args[0] = ($w)$1;
+             *          Object ret = handler.invoke(this, methods[0], args);
+             *          return (java.lang.String)ret;
+             * }
+             *
+             *
+             */
+
+
             if (pkg == null) {
                 pkg = PACKAGE_NAME;
             }

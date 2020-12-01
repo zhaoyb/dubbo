@@ -34,6 +34,8 @@ import static org.apache.dubbo.common.constants.CommonConstants.COMMA_SPLIT_PATT
 import static org.apache.dubbo.rpc.Constants.INTERFACES;
 
 /**
+ * 抽象代理工厂
+ *
  * AbstractProxyFactory
  */
 public abstract class AbstractProxyFactory implements ProxyFactory {
@@ -50,15 +52,19 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
     public <T> T getProxy(Invoker<T> invoker, boolean generic) throws RpcException {
         Set<Class<?>> interfaces = new HashSet<>();
 
+        // 接口
         String config = invoker.getUrl().getParameter(INTERFACES);
         if (config != null && config.length() > 0) {
+            // 逗号拆分
             String[] types = COMMA_SPLIT_PATTERN.split(config);
             for (String type : types) {
                 // TODO can we load successfully for a different classloader?.
+                // 添加到集合
                 interfaces.add(ReflectUtils.forName(type));
             }
         }
 
+        // 是否泛化
         if (generic) {
             if (!GenericService.class.isAssignableFrom(invoker.getInterface())) {
                 interfaces.add(com.alibaba.dubbo.rpc.service.GenericService.class);

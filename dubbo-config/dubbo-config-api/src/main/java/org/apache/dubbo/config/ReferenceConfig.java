@@ -207,7 +207,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             if (revision != null && revision.length() > 0) {
                 map.put(REVISION_KEY, revision);
             }
-
+            // 获取接口方法
             String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
             if (methods.length == 0) {
                 logger.warn("No method found in service interface " + interfaceClass.getName());
@@ -310,6 +310,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
                     // 检查注册中心
                     checkRegistry();
+                    //us 中url 格式 registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-consumer&dubbo=2.0.2&pid=15188&registry=zookeeper&timestamp=1606810660341
                     List<URL> us = ConfigValidationUtils.loadRegistries(this, false);
                     if (CollectionUtils.isNotEmpty(us)) {
                         for (URL u : us) {
@@ -319,6 +320,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                                 map.put(MONITOR_KEY, URL.encode(monitorUrl.toFullString()));
                             }
                             // 注册中心地址添加 refer 服务消费元数据
+                            // 格式 registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-consumer&dubbo=2.0.2&pid=15188&refer=application=dubbo-demo-api-consumer&dubbo=2.0.2&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=15188&register.ip=172.17.21.21&side=consumer&sticky=false&timestamp=1606810548841&registry=zookeeper&timestamp=1606810660341
                             urls.add(u.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
                         }
                     }
@@ -394,7 +396,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
      * Check each config modules are created properly and override their properties if necessary.
      */
     public void checkAndUpdateSubConfigs() {
-        // 接口空判断
+        // 接口名空判断
         if (StringUtils.isEmpty(interfaceName)) {
             throw new IllegalStateException("<dubbo:reference interface=\"\" /> interface not allow null!");
         }

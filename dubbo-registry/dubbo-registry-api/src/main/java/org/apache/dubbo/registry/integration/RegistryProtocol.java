@@ -396,7 +396,7 @@ public class RegistryProtocol implements Protocol {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
-        // 获取服务的注册中心url,
+        // 生成服务的注册中心url,
         url = getRegistryUrl(url);
         // 获取注册中心实例
         Registry registry = registryFactory.getRegistry(url);

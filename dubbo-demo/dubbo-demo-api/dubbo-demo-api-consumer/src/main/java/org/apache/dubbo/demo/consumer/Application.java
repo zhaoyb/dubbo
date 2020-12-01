@@ -31,7 +31,8 @@ public class Application {
         if (isClassic(args)) {
             runWithRefer();
         } else {
-            runWithBootstrap();
+            runWithRefer();
+            //runWithBootstrap();
         }
     }
 
