@@ -241,8 +241,11 @@ public abstract class Proxy {
             String fcn = Proxy.class.getName() + id;
             ccm = ClassGenerator.newInstance(cl);
             ccm.setClassName(fcn);
+            // 默认构造函数
             ccm.addDefaultConstructor();
+            // 超类
             ccm.setSuperClass(Proxy.class);
+            // newInstance方法
             ccm.addMethod("public Object newInstance(" + InvocationHandler.class.getName() + " h){ return new " + pcn + "($1); }");
             Class<?> pc = ccm.toClass();
             proxy = (Proxy) pc.newInstance();

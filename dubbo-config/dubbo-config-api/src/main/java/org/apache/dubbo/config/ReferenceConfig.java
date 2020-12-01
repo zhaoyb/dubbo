@@ -150,6 +150,11 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         this.repository = ApplicationModel.getServiceRepository();
     }
 
+    /**
+     * 同步方法 获取代理对象
+     *
+     * @return
+     */
     public synchronized T get() {
         // 若已经销毁， 则抛出异常
         if (destroyed) {
@@ -182,6 +187,10 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         dispatch(new ReferenceConfigDestroyedEvent(this));
     }
 
+    /**
+     * 客户端初始化核心流程
+     *
+     */
     public synchronized void init() {
         // 已经初始化， 返回
         if (initialized) {
@@ -329,7 +338,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
                     }
                 }
             }
-
+            //  url 格式  registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-consumer&dubbo=2.0.2&pid=10829&refer=application=dubbo-demo-api-consumer&dubbo=2.0.2&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=10829&register.ip=127.0.0.1&side=consumer&sticky=false&timestamp=1606831531938&registry=zookeeper&timestamp=1606831958901
             // 只有一条注册中心数据，即单注册中心
             if (urls.size() == 1) {
                 // 将远程服务转化为 Invoker
