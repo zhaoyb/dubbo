@@ -64,6 +64,15 @@ public class ProtocolListenerWrapper implements Protocol {
                         .getActivateExtension(invoker.getUrl(), EXPORTER_LISTENER_KEY)));
     }
 
+    /**
+     * 当注册中心有变化，会出发此类
+     *
+     * @param type Service class
+     * @param url  URL address for the remote service
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @Override
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         if (UrlUtils.isRegistry(url)) {

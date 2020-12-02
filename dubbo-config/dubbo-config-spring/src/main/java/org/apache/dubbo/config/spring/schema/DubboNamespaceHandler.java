@@ -46,6 +46,11 @@ import org.w3c.dom.Element;
 import static com.alibaba.spring.util.AnnotatedBeanDefinitionRegistryUtils.registerBeans;
 
 /**
+ *
+ * 这个类主要是和spring 一起工作，注册节点解析类
+ *
+ * 当使用spring xml配置dubbo时，此类用于解析xml配置节点
+ *
  * DubboNamespaceHandler
  *
  * @export
@@ -56,6 +61,10 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
         Version.checkDuplicate(DubboNamespaceHandler.class);
     }
 
+    /**
+     * 注册解析类
+     *
+     */
     @Override
     public void init() {
         registerBeanDefinitionParser("application", new DubboBeanDefinitionParser(ApplicationConfig.class, true));
@@ -70,6 +79,7 @@ public class DubboNamespaceHandler extends NamespaceHandlerSupport implements Co
         registerBeanDefinitionParser("consumer", new DubboBeanDefinitionParser(ConsumerConfig.class, true));
         registerBeanDefinitionParser("protocol", new DubboBeanDefinitionParser(ProtocolConfig.class, true));
         registerBeanDefinitionParser("service", new DubboBeanDefinitionParser(ServiceBean.class, true));
+        // 注意ReferenceBean类，一般会有多个配置，但是注册到spring中对应的类都是ReferenceBean， 这个是工厂类
         registerBeanDefinitionParser("reference", new DubboBeanDefinitionParser(ReferenceBean.class, false));
         registerBeanDefinitionParser("annotation", new AnnotationBeanDefinitionParser());
     }

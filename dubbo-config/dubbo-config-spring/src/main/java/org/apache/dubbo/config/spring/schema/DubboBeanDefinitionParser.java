@@ -78,11 +78,23 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
         this.required = required;
     }
 
+    /**
+     *
+     * 基于xml配置时，使用该函数解析xml配置
+     *
+     * @param element
+     * @param parserContext
+     * @param beanClass
+     * @param required
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private static BeanDefinition parse(Element element, ParserContext parserContext, Class<?> beanClass, boolean required) {
         RootBeanDefinition beanDefinition = new RootBeanDefinition();
+        // 注意这里beanclass, 可能是ReferenceBean，不是真正的类型
         beanDefinition.setBeanClass(beanClass);
         beanDefinition.setLazyInit(false);
+        // 节点Id
         String id = element.getAttribute("id");
         if (StringUtils.isEmpty(id) && required) {
             String generatedBeanName = element.getAttribute("name");
@@ -106,6 +118,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
             if (parserContext.getRegistry().containsBeanDefinition(id)) {
                 throw new IllegalStateException("Duplicate spring bean id " + id);
             }
+            // 往spring 容器中注册bean
             parserContext.getRegistry().registerBeanDefinition(id, beanDefinition);
             beanDefinition.getPropertyValues().addPropertyValue("id", id);
         }

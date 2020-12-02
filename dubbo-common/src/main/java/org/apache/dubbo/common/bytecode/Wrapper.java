@@ -116,12 +116,19 @@ public abstract class Wrapper {
         return WRAPPER_MAP.computeIfAbsent(c, key -> makeWrapper(key));
     }
 
+    /**
+     * 对服务端类进行包装
+     *
+     * @param c
+     * @return
+     */
     private static Wrapper makeWrapper(Class<?> c) {
         if (c.isPrimitive()) {
             throw new IllegalArgumentException("Can not create wrapper for primitive type: " + c);
         }
 
         String name = c.getName();
+        // 类加载器
         ClassLoader cl = ClassUtils.getClassLoader(c);
 
         StringBuilder c1 = new StringBuilder("public void setPropertyValue(Object o, String n, Object v){ ");
