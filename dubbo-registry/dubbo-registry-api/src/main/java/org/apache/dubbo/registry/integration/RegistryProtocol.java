@@ -203,11 +203,15 @@ public class RegistryProtocol implements Protocol {
         // 根据override的配置来覆盖原来的url，使得配置是最新的
         providerUrl = overrideUrlWithConfig(providerUrl, overrideSubscribeListener);
         //export invoker
-        // 服务暴露
+
+
+        //--------------------------------------服务暴露-----------------------------------------
+        // 重要 服务暴露
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
 
 
 
+        //--------------------------------------服务注册-----------------------------------------
         // url to registry
         final Registry registry = getRegistry(originInvoker);
         final URL registeredProviderUrl = getUrlToRegistry(providerUrl, registryUrl);
