@@ -175,12 +175,14 @@ public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {
     }
 
     /**
+     * 检查注册中心
      * Check whether the registry config is exists, and then conversion it to {@link RegistryConfig}
      */
     public void checkRegistry() {
         convertRegistryIdsToRegistries();
 
         for (RegistryConfig registryConfig : registries) {
+            // 检查注册中心有效性，其实就是检查注册中心address是否为空
             if (!registryConfig.isValid()) {
                 throw new IllegalStateException("No registry config found or it's not a valid config! " +
                         "The registry config is: " + registryConfig);

@@ -86,6 +86,8 @@ public class DubboShutdownHook extends Thread {
     }
 
     /**
+     * 注册关机hook
+     *
      * Register the ShutdownHook
      */
     public void register() {
@@ -117,6 +119,7 @@ public class DubboShutdownHook extends Thread {
 
     public static void destroyAll() {
         if (destroyed.compareAndSet(false, true)) {
+            // 销毁 Registry 相关
             AbstractRegistryFactory.destroyAll();
             destroyProtocols();
         }

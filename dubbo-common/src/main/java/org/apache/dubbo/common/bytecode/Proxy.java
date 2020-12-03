@@ -36,6 +36,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.apache.dubbo.common.constants.CommonConstants.MAX_PROXY_COUNT;
 
 /**
+ * 消费端使用，对引用的类进行代理
+ *
  * Proxy.
  */
 

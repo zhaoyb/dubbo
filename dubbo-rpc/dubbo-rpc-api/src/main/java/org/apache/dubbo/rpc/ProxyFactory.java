@@ -47,11 +47,14 @@ public interface ProxyFactory {
     <T> T getProxy(Invoker<T> invoker, boolean generic) throws RpcException;
 
     /**
+     *
+     * 服务端调用该方法
+     *
      * create invoker.
      *
      * @param <T>
-     * @param proxy
-     * @param type
+     * @param proxy  要代理的类的实例
+     * @param type   要代理的类的类型
      * @param url
      * @return invoker
      */

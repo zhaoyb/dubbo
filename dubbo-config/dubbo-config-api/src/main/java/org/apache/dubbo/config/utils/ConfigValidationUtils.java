@@ -173,34 +173,48 @@ public class ConfigValidationUtils {
         ApplicationConfig application = interfaceConfig.getApplication();
         // 注册中心信息
         List<RegistryConfig> registries = interfaceConfig.getRegistries();
+        // 如果registries为空，则直接返回空集合
         if (CollectionUtils.isNotEmpty(registries)) {
+            // 遍历注册中心集合
             for (RegistryConfig config : registries) {
                 //注册中心地址
                 String address = config.getAddress();
+                // 如果注册中心为空，则设置为0.0.0.0
                 if (StringUtils.isEmpty(address)) {
                     address = ANYHOST_VALUE;
                 }
+                // 如果注册中心为N/A, 则跳过
                 if (!RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(address)) {
                     Map<String, String> map = new HashMap<String, String>();
+                    // 添加applicationconfig到map集合
                     AbstractConfig.appendParameters(map, application);
+                    // 添加RegistryConfig到map集合
                     AbstractConfig.appendParameters(map, config);
+                    // 添加path
                     map.put(PATH_KEY, RegistryService.class.getName());
-                    // 追加运行时的通用环境变量
+                    // 追加运行时的通用环境变量, 包括协议版本，发布版本，时间戳
                     AbstractInterfaceConfig.appendRuntimeParameters(map);
+                    // 判断集合中是否有 protocol元素
                     if (!map.containsKey(PROTOCOL_KEY)) {
                         //默认dubbo协议
                         map.put(PROTOCOL_KEY, DUBBO_PROTOCOL);
                     }
+                    // address可能配置多个，所以会被分隔开，并返回多个
                     // url like zookeeper://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=1495&timestamp=1591472061775
                     List<URL> urls = UrlUtils.parseURLs(address, map);
 
+                    // 遍历url
                     for (URL url : urls) {
+                        // 更换协议头
                         // url like registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService?application=dubbo-demo-api-provider&dubbo=2.0.2&pid=1495&registry=zookeeper&timestamp=1591472061775
                         url = URLBuilder.from(url)
                                 .addParameter(REGISTRY_KEY, url.getProtocol())
                                 .setProtocol(extractRegistryType(url))
                                 .build();
 
+                        // 如果是服务端 并且 是注册中心服务
+                        // 如果是消费端 并且 订阅服务
+                        // 添加到集合
                         if ((provider && url.getParameter(REGISTER_KEY, true))
                                 || (!provider && url.getParameter(SUBSCRIBE_KEY, true))) {
                             registryList.add(url);
