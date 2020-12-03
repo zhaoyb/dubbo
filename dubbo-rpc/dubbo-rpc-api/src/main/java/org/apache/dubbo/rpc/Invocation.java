@@ -31,6 +31,8 @@ public interface Invocation {
     String getTargetServiceUniqueName();
 
     /**
+     * 返回方法名
+     *
      * get method name.
      *
      * @return method name.
@@ -40,12 +42,16 @@ public interface Invocation {
 
 
     /**
+     * 返回接口名
+     *
      * get the interface name
      * @return
      */
     String getServiceName();
 
     /**
+     *
+     * 返回参数类型数组
      * get parameter types.
      *
      * @return parameter types.
@@ -54,6 +60,8 @@ public interface Invocation {
     Class<?>[] getParameterTypes();
 
     /**
+     * 方法签名
+     *
      * get parameter's signature, string representation of parameter types.
      *
      * @return parameter's signature
@@ -65,6 +73,8 @@ public interface Invocation {
     }
 
     /**
+     * 返回参数
+     *
      * get arguments.
      *
      * @return arguments.
@@ -73,6 +83,8 @@ public interface Invocation {
     Object[] getArguments();
 
     /**
+     * 消息附件
+     *
      * get attachments.
      *
      * @return attachments.
@@ -108,6 +120,8 @@ public interface Invocation {
     Object getObjectAttachment(String key, Object defaultValue);
 
     /**
+     * 在当前上下文中获取调用者
+     *
      * get the invoker in current context.
      *
      * @return invoker.

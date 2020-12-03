@@ -52,14 +52,36 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
  */
 public class DubboInvoker<T> extends AbstractInvoker<T> {
 
+    /**
+     * 交换客户端数组
+     *
+     */
     private final ExchangeClient[] clients;
 
+    /**
+     * 交换客户端位置索引
+     *
+     */
     private final AtomicPositiveInteger index = new AtomicPositiveInteger();
 
+    /**
+     * 版本
+     *
+     */
     private final String version;
 
+
+    /**
+     * 销毁锁
+     *
+     */
     private final ReentrantLock destroyLock = new ReentrantLock();
 
+
+    /**
+     * invokers 集合
+     *
+     */
     private final Set<Invoker<?>> invokers;
 
     public DubboInvoker(Class<T> serviceType, URL url, ExchangeClient[] clients) {
@@ -77,38 +99,41 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
     /**
      * 调用
      *
-     * @param invocation  调用信心
+     * @param invocation  调用信息
      * @return
      * @throws Throwable
      */
     @Override
     protected Result doInvoke(final Invocation invocation) throws Throwable {
+        // RPC调用信息
         RpcInvocation inv = (RpcInvocation) invocation;
         // 获取方法名
         final String methodName = RpcUtils.getMethodName(invocation);
-        // path, version
+        // path, version放入到RpcInvocation
         inv.setAttachment(PATH_KEY, getUrl().getPath());
         inv.setAttachment(VERSION_KEY, version);
 
-        //ExchangeClient对象
+        //ExchangeClient对象, 当前的客户端
         ExchangeClient currentClient;
         if (clients.length == 1) {
             currentClient = clients[0];
         } else {
-            // 轮询
+            // 轮询使用交换客户端
             currentClient = clients[index.getAndIncrement() % clients.length];
         }
         try {
-            // 是否是oneway调用
+            // 是否是单向调用
             boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
             //  超时时间
             int timeout = getUrl().getMethodPositiveParameter(methodName, TIMEOUT_KEY, DEFAULT_TIMEOUT);
             if (isOneway) {
-                // oneway调用
+                // 单向调用
                 boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
+                // 发送，不关心结果
                 currentClient.send(inv, isSent);
                 return AsyncRpcResult.newDefaultAsyncResult(invocation);
             } else {
+                // 获取执行器
                 ExecutorService executor = getCallbackExecutor(getUrl(), inv);
                 CompletableFuture<AppResponse> appResponseFuture =
                         currentClient.request(inv, timeout, executor).thenApply(obj -> (AppResponse) obj);
@@ -125,6 +150,12 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         }
     }
 
+    /**
+     *
+     * 检查连接是否可用，只要有一个可用，就返回可用
+     *
+     * @return
+     */
     @Override
     public boolean isAvailable() {
         if (!super.isAvailable()) {
@@ -139,6 +170,10 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         return false;
     }
 
+    /**
+     * 销毁
+     *
+     */
     @Override
     public void destroy() {
         // in order to avoid closing a client multiple times, a counter is used in case of connection per jvm, every
@@ -155,8 +190,10 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 }
                 super.destroy();
                 if (invokers != null) {
+                    // 从invoker中移除
                     invokers.remove(this);
                 }
+                // 关闭连接
                 for (ExchangeClient client : clients) {
                     try {
                         client.close(ConfigurationUtils.getServerShutdownTimeout());
