@@ -440,12 +440,22 @@ public class RegistryProtocol implements Protocol {
         return ExtensionLoader.getExtensionLoader(Cluster.class).getExtension("mergeable");
     }
 
+    /**
+     *
+     *
+     * @param cluster 集群策略
+     * @param registry  注册中心实现类
+     * @param type 引用发服务名
+     * @param url  注册中心URL
+     * @param <T>
+     * @return
+     */
     private <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url) {
         // 创建 RegistryDirectory 对象
         RegistryDirectory<T> directory = new RegistryDirectory<T>(type, url);
-        // 设置注册中心
+        // RegistryDirectory 设置注册中心
         directory.setRegistry(registry);
-        // 设置协议
+        // RegistryDirectory 设置协议
         directory.setProtocol(protocol);
         // all attributes of REFER_KEY
 
